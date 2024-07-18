@@ -99,7 +99,6 @@ export class IndeedPage {
     }
 
     async #getCardJobTitle(rowIndex: number): Promise<string> {
-        //return await this.tableSearchResult.locator('tbody').locator('tr').nth(rowIndex).locator('td').nth(columnIndex).innerText()
         return await this.dataCard.first().locator("ul div[data-testid=slider_item]").nth(rowIndex).locator("tbody").locator('h2').innerText();
     }
 
@@ -109,7 +108,6 @@ export class IndeedPage {
 
     async #getJobPostLink(rowIndex: number) {
         return await this.dataCard.first().locator("ul div[data-testid=slider_item]").nth(rowIndex).locator("tbody").locator("h2").locator('a').getAttribute('href')
-        //return await this.tableSearchResult.locator('tbody').locator('tr').nth(rowIndex).locator('td').nth(columnIndex).locator('a').getAttribute('href')
     }
 
     async #getPagination(){
