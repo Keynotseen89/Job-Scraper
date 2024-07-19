@@ -3,6 +3,9 @@
  * Date: 07/16/2024
  */
 import {type Locator, type Page } from 'playwright'
+import { google } from "googleapis"
+require('dotenv').config()
+
 export class CraigslistPage {
     readonly page: Page;
     readonly viewModeBar: Locator;
@@ -37,20 +40,39 @@ export class CraigslistPage {
     }
 
     async getData(){
+        const auth = new google.auth.JWT({
+            email: process.env.EMAIL,
+            key: process.env.KEY,
+            scopes: ["https://www.googleapis.com/auth/spreadsheets"]
+        });
+
+        const sheet = google.sheets("v4");
+
         await this.viewModeBar.waitFor({ state: "visible" });
         await this.viewModeBar.waitFor({ state: "attached" });
-
        
         var dataListCount = await this.#getListSearchCount();
         console.log("COUNT : " + dataListCount.toString())
 
         for(let index = 0; index < dataListCount; index++){
-            //await this.page.waitForTimeout(5000);
+            
+            //Section is just used to display in the terminal 
             console.log("JOB TITLE : "+ (await this.#getJobTitle(index)))
             console.log("META DATA: " + (await this.#getMetaData(index)).toString())
             console.log("LINK: " + (await this.#getJobPostLink(index)))
             console.log(".........................................\n");
             console.log(".........................................\n");
+
+            //Append to google sheets
+            await sheet.spreadsheets.values.append({
+                spreadsheetId: process.env.CRAIGSLIST_SPREAD_SHEETID,
+                auth: auth,
+                range: "craigslist",
+                valueInputOption: "RAW",
+                requestBody: {
+                    values: [["craigslist", await this.#getJobTitle(index), (await this.#getMetaData(index)).toString(), await this.#getJobPostLink(index)]]
+                }
+            });
         }
     }
 }
