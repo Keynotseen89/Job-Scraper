@@ -3,6 +3,9 @@
  * Date: 07/13/2024
  */
 import {type Locator, type Page}  from 'playwright'
+import { google } from "googleapis"
+require('dotenv').config()
+
 export class IndeedPage {
     readonly page: Page;
     readonly searchInputBar: Locator;
@@ -107,7 +110,9 @@ export class IndeedPage {
     }
 
     async #getJobPostLink(rowIndex: number) {
-        return await this.dataCard.first().locator("ul div[data-testid=slider_item]").nth(rowIndex).locator("tbody").locator("h2").locator('a').getAttribute('href')
+        var dataValue = await this.dataCard.first().locator("ul div[data-testid=slider_item]").nth(rowIndex).locator("tbody").locator("h2").locator('a').getAttribute('data-jk')//.getAttribute('href')
+        var dataMobtkValue = await this.dataCard.first().locator("ul div[data-testid=slider_item]").nth(rowIndex).locator("tbody").locator("h2").locator('a').getAttribute('data-mobtk')
+        return `https://www.indeed.com/viewjob?jk=${dataValue}&from=searchOnDesktopSearch&tk=${dataMobtkValue}`;
     }
 
     async #getPagination(){
@@ -115,11 +120,20 @@ export class IndeedPage {
     }
     
     async getData(){
+        const auth = new google.auth.JWT({
+            email: process.env.EMAIL,
+            key: process.env.KEY,
+            scopes: ["https://www.googleapis.com/auth/spreadsheets"]
+        });
+
+        const sheet = google.sheets("v4");
+
         await this.dataCard.waitFor({ state: "visible" });
         await this.dataCard.waitFor({ state: "attached" });
 
         var cardCount = await this.#getCardSearchCount();
-
+        
+        //Section is just used to display in the terminal 
         for(let index = 0; index < cardCount; index++){
             await this.page.waitForTimeout(5000);
             console.log("JOB TITLE : "+ (await this.#getCardJobTitle(index)).toString())
@@ -127,6 +141,17 @@ export class IndeedPage {
             console.log("LINK: " + (await this.#getJobPostLink(index)))
             console.log(".........................................\n");
             console.log(".........................................\n");
+
+            //Append to google sheets
+            await sheet.spreadsheets.values.append({
+                spreadsheetId: process.env.CRAIGSLIST_SPREAD_SHEETID,
+                auth: auth,
+                range: "indeed",
+                valueInputOption: "RAW",
+                requestBody: {
+                    values: [["indeed", (await this.#getCardJobTitle(index)).toString(), (await this.#getPayRate(index)).toString(), (await this.#getJobPostLink(index))]]
+                }
+            });
         }
 
         /*
