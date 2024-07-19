@@ -1,0 +1,8 @@
+node_modules/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+# dotenv environment variables files
+.env
+.env.test 
