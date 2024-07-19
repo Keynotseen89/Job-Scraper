@@ -1,5 +1,6 @@
 import { BrowserReferers, UserAgent } from '../browser-config/chrome-config'
 import { IndeedPage }  from '../page-object-models/indeed-page-model/IndeedPage'
+import { PAGE_URL } from '../url/page-url';
 
 const { chromium } = require('playwright')
 
@@ -9,7 +10,7 @@ const { chromium } = require('playwright')
     
     const page = await context.newPage();
 
-    await page.goto("https://indeed.com", "domcontentloaded")
+    await page.goto(PAGE_URL.Indeed_Page, "domcontentloaded")
  
     const webPage = new IndeedPage(page);
 
